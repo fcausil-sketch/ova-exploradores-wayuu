@@ -57,10 +57,10 @@ if(!ready){
  googleBtn.addEventListener('click',()=>begin('google'));
  onAuthStateChanged(auth,u=>{if(!active&&u&&savedAlias)setStatus('Existe una sesión previa ('+savedAlias+'). Marque la autorización y pulse el botón correspondiente para reanudarla.');});
  window.ovaCloud={async sendSnapshot(state){
-   if(!active){setStatus('El avance quedó guardado en este navegador. Para enviarlo a Firebase, seleccione «Continuar con Google» o «Continuar sin correo».');return;}
-   if(sending){setStatus('Ya hay un envío en curso. Vuelva a guardar después de terminar.');return;}
+   if(!active){const m='Primero inicie sesión arriba con «Continuar sin correo» o «Continuar con Google».';setStatus('El avance quedó guardado en este navegador. '+m);return {ok:false,needsLogin:true,reason:m};}
+   if(sending){const m='Ya existe un guardado en curso; espere un momento y pulse Enviar nuevamente.';setStatus(m);return {ok:false,reason:m};}
    const u=auth.currentUser;
-   if(!u){active=false;setStatus('Sesión cerrada: vuelva a iniciar sesión antes de registrar las respuestas.','bad');return;}
+   if(!u){active=false;const m='La sesión está cerrada; inicie sesión de nuevo.';setStatus(m,'bad');return {ok:false,needsLogin:true,reason:m};}
    sending=true;
    try{
     const alias=validate();
@@ -71,7 +71,8 @@ if(!ready){
     const score=['q4','q5','q6'].reduce((n,k)=>n+(answers[k]==='1'?1:0),0);
     await setDoc(doc(db,'ova_respuestas',u.uid),{alias,answers,done,score,version:'OVA-2.2',updatedAt:serverTimestamp()});
     setStatus('Guardado en Firestore: '+alias+' · '+done.length+'/5 módulos · '+score+'/3 aciertos.','ok');
-   }catch(e){setStatus('Error de sincronización ('+(e.code||e.message||'desconocido')+'). Las respuestas siguen en este navegador.','bad');}
+    return {ok:true,alias,modules:done.length,score};
+   }catch(e){const reason=e.code||e.message||'error desconocido';setStatus('Error de sincronización ('+reason+'). Las respuestas siguen en este navegador.','bad');return {ok:false,reason};}
    finally{sending=false;}
  }};
  freshBtn.addEventListener('click',async()=>{
