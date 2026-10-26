@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reporte visual privado · OVA Wayuu</title>
+<style>
+:root{
+  --bg:#f3f7f4; --card:#ffffff; --line:#dbe7e0; --text:#173b38; --muted:#5c766c;
+  --brand:#146b56; --brand2:#e7f3ee; --warn:#fff4e8; --warnLine:#d88928; --danger:#fff0ed; --dangerLine:#c05849;
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0;font-family:system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+a{color:var(--brand)} code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+.wrap{max-width:1280px;margin:auto;padding:28px 18px 56px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:10px}
+.headline{font-size:31px;margin:.15rem 0}.kicker{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.lead{color:var(--muted);line-height:1.55;max-width:900px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 6px 22px rgba(18,41,31,.06);margin:16px 0}
+.button{appearance:none;border:0;border-radius:11px;padding:11px 15px;font:inherit;font-weight:800;cursor:pointer;background:var(--brand);color:#fff}
+.button.alt{background:#e5f0eb;color:#164a3c}.button.outline{background:#fff;border:1px solid #b7cdc2;color:#164a3c}
+.button.small{padding:8px 11px;font-size:13px;border-radius:9px}.button:disabled{opacity:.5;cursor:not-allowed}
+.controls,.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;gap:14px}.stats{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.stat{background:linear-gradient(180deg,#f6fbf8,#eef6f1);border:1px solid #d9e7e0;border-radius:16px;padding:16px}
+.stat b{display:block;font-size:30px;line-height:1.05;margin-bottom:4px}.muted{color:var(--muted);font-size:13px}
+.notice{padding:12px 14px;border-left:4px solid var(--brand);background:#f4f8f5;border-radius:0 10px 10px 0;line-height:1.5;margin-top:12px}
+.notice.error{background:var(--danger);border-left-color:var(--dangerLine)}
+.notice.warn{background:var(--warn);border-left-color:var(--warnLine)}
+input,select{font:inherit;padding:10px 12px;border:1px solid #b8cdc2;border-radius:10px;background:#fff;color:var(--text)}
+label{display:block;font-weight:760;margin-bottom:5px}.field{min-width:190px;flex:1}
+.tablebox{overflow:auto;border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:14px;background:#fff} th,td{padding:12px 10px;border-bottom:1px solid #e6eeea;text-align:left;vertical-align:top} th{position:sticky;top:0;background:#edf5f0;z-index:1} tr:hover td{background:#fafdfb}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:#edf5f0;color:#1b5e4d;font-size:12px;font-weight:800}.badge.warn{background:#fff3df;color:#9a620a}.badge.gray{background:#f0f2f1;color:#53675f}
+.moduleGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.moduleCard{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fbfdfc}.moduleCard h3{margin:0 0 8px;font-size:15px}.moduleCard .big{font-size:28px;font-weight:900}
+.snippet{display:block;color:#4f6b61;font-size:12px;line-height:1.4;margin-top:6px;max-height:3.9em;overflow:hidden}
+.dialog{width:min(1050px,96vw);border:1px solid var(--line);border-radius:18px;padding:0;box-shadow:0 24px 60px rgba(0,0,0,.18)}
+.dialog::backdrop{background:rgba(10,28,24,.6)}
+.dialogHead{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.dialogBody{padding:18px 20px 22px;max-height:76vh;overflow:auto;background:#fbfdfc}
+.sessionHero{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.heroMini{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}.heroMini b{display:block;font-size:22px}
+.detailSection{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}.detailSection h3{margin:0 0 10px;font-size:17px}
+.qitem{padding:10px 0;border-top:1px dashed #dde7e2}.qitem:first-child{border-top:0;padding-top:0}
+.qtitle{font-weight:760;margin-bottom:5px}.answer{background:#f6faf8;border:1px solid #e2ece7;border-radius:12px;padding:10px 12px;white-space:pre-wrap}
+.ok{color:#196f55;font-weight:800}.no{color:#9f3a2d;font-weight:800}.pillList{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
+.pill{padding:5px 8px;border-radius:999px;background:#edf5f0;font-size:12px;font-weight:700}
+#data{display:none}
+@media (max-width:640px){.headline{font-size:25px} .dialogBody{padding:14px} .dialogHead{padding:14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="kicker">Conectando Saberes · Exploradores Digitales Wayuu</div>
+      <h1 class="headline">Reporte visual docente</h1>
+      <div class="lead">Revise las respuestas de forma más clara, por sesión y por módulo, y descargue reportes listos para abrir en Excel. Esta vista es solo de consulta y no modifica los registros.</div>
+    </div>
+    <div class="controls">
+      <a class="button outline" href="./docente.html">Panel docente anterior</a>
+    </div>
+  </header>
+
+  <section class="card" id="login">
+    <h2>Acceso del docente</h2>
+    <p class="lead">Ingrese con su cuenta de Google docente. Si esta es la primera vez, copie su UID y autorícelo en las reglas de Firestore.</p>
+    <p><button class="button" id="teacherGoogle" type="button">Entrar con Google como docente</button></p>
+    <div class="notice" id="loginMsg">Debe configurar Firebase Authentication y las reglas de Firestore antes de utilizar este panel.</div>
+  </section>
+
+  <section id="data">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:flex-start">
+        <div>
+          <h2 style="margin-top:0">Cuenta docente autorizada</h2>
+          <div class="lead">Este UID debe estar permitido en las reglas de Firestore para consultar la base de datos.</div>
+          <div style="margin-top:10px"><code id="teacherUID"></code> <button id="copyUID" class="button alt small" type="button">Copiar UID</button></div>
+        </div>
+        <div class="controls">
+          <button class="button alt" id="logout">Cerrar sesión</button>
+          <button class="button alt" id="refresh">Actualizar registros</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid stats">
+      <div class="stat"><b id="count">0</b><span>Sesiones registradas</span></div>
+      <div class="stat"><b id="complete">0</b><span>Con 5 módulos completos</span></div>
+      <div class="stat"><b id="average">—</b><span>Aciertos promedio (0 a 3)</span></div>
+      <div class="stat"><b id="codes">0</b><span>Códigos únicos</span></div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Reporte por módulo</h2>
+      <div class="moduleGrid" id="moduleCards"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Filtros y descargas</h2>
+      <div class="row">
+        <div class="field"><label for="search">Buscar código</label><input id="search" placeholder="Ejemplo: EQUIPO-01 o MariaPerez"></div>
+        <div class="field"><label for="completionFilter">Estado</label><select id="completionFilter"><option value="all">Todas las sesiones</option><option value="complete">Solo 5 módulos</option><option value="partial">Solo parciales</option></select></div>
+        <div class="field"><label for="moduleFilter">Filtrar por módulo</label><select id="moduleFilter"><option value="all">Todos</option><option value="m1">Módulo 1</option><option value="m2">Módulo 2</option><option value="m3">Módulo 3</option><option value="m4">Módulo 4</option><option value="m5">Módulo 5</option><option value="reto">Reto final</option></select></div>
+      </div>
+      <div class="controls" style="margin-top:12px">
+        <button class="button" id="downloadSummary" disabled>Descargar Excel (.xlsx)</button>
+        <button class="button outline" id="downloadModules" disabled>Descargar CSV por módulo</button>
+      </div>
+      <div id="teacherMsg" class="notice" role="status">Consultando...</div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Sesiones registradas</h2>
+      <div class="tablebox">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Progreso</th>
+              <th>Aciertos</th>
+              <th>Último guardado</th>
+              <th>Resumen</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <dialog id="detail" class="dialog">
+    <div class="dialogHead">
+      <div>
+        <div class="kicker">Reporte individual</div>
+        <h2 style="margin:.2rem 0 0" id="detailTitle">Sesión</h2>
+      </div>
+      <button class="button alt" id="closeDetails" type="button">Cerrar</button>
+    </div>
+    <div class="dialogBody" id="detailBody"></div>
+  </dialog>
+</div>
+
+<script type="module">
+import { firebaseConfig } from './firebase-config.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
+import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
+
+const $=id=>document.getElementById(id);
+const rows=$('rows');
+let records=[];
+let filtered=[];
+
+const MODULE_INFO={
+  m1:{name:'Módulo 1 · Alfabetización digital', items:['q1','a1']},
+  m2:{name:'Módulo 2 · Ciudadanía digital', items:['q2','a2']},
+  m3:{name:'Módulo 3 · Ética y pensamiento crítico', items:['q3','a3']},
+  m4:{name:'Módulo 4 · Narrativas del territorio', items:['a4a','a4b','a4c']},
+  m5:{name:'Módulo 5 · Galería de Saberes', items:['c1','c2','c3','c4','c5','a5']},
+  reto:{name:'Reto final y reflexión', items:['q4','q5','q6','final']},
+};
+const QUESTION_TEXT={
+  q1:'¿Qué nombre ayuda a identificar mejor un archivo?',
+  a1:'Reflexión: ¿cómo organizaría sus archivos para encontrarlos después?',
+  q2:'¿Qué respuesta ayuda más a cuidar la convivencia?',
+  a2:'Escriba un acuerdo adicional de convivencia digital.',
+  q3:'Si recibe un mensaje alarmante sin fuente, ¿qué debería hacer?',
+  a3:'Explique dos criterios para decidir si una información es confiable.',
+  a4a:'Mi pregunta de investigación.',
+  a4b:'¿Qué fuentes puedo consultar?',
+  a4c:'¿Qué producto elaboraré?',
+  c1:'Mi producto responde una pregunta clara.',
+  c2:'Distingo información de opiniones o supuestos.',
+  c3:'Tengo autorización para compartir imágenes o historias, si corresponde.',
+  c4:'Reconozco la fuente y los aportes de otras personas.',
+  c5:'Puedo explicar qué aprendí y cómo trabajó mi equipo.',
+  a5:'Título de mi producto o del equipo.',
+  q4:'Reto 1: antes de compartir un mensaje que puede ser falso, debo...',
+  q5:'Reto 2: para registrar la historia de una persona de mi comunidad debo...',
+  q6:'Reto 3: ¿qué hace que una Galería de Saberes sea responsable?',
+  final:'Reflexión final.',
+};
+const OPTION_TEXT={
+  q1:{'1':'Cuidado_del_agua_Riohacha.txt','0':'Otra opción no adecuada'},
+  q2:{'1':'No difundir, apoyar al compañero y comunicar la situación a un adulto de confianza.','0':'Opción no adecuada'},
+  q3:{'1':'Verificar quién lo publicó y contrastarlo con fuentes confiables.','0':'Opción no adecuada'},
+  q4:{'1':'Verificar quién lo publica y contrastarlo con fuentes confiables.','0':'Opción no adecuada'},
+  q5:{'1':'Solicitar autorización, explicar el propósito y respetar sus límites.','0':'Opción no adecuada'},
+  q6:{'1':'Presentar aprendizajes, evidencias, reconocer aportes y respetar privacidad y acuerdos culturales.','0':'Opción no adecuada'},
+};
+const CORRECT=['q1','q2','q3','q4','q5','q6'];
+
+const configured=firebaseConfig?.apiKey && firebaseConfig?.projectId && !JSON.stringify(firebaseConfig).includes('PEGUE_');
+if(!configured){
+  $('loginMsg').textContent='Firebase aún no está configurado. Complete firebase-config.js y las reglas de Firestore.';
+  $('loginMsg').classList.add('error');
+}
+
+function printTime(v){ try { return v?.toDate?.().toLocaleString('es-CO') || 'Sin fecha'; } catch { return 'Sin fecha'; } }
+function moduleCount(r){ return Array.isArray(r.done)?r.done.length:0; }
+function uniqueCodes(rs){ return new Set(rs.map(r=>String(r.alias||'').trim()).filter(Boolean)).size; }
+function escapeHTML(x){ return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function hasModule(rec,key){
+  if(key==='reto') return ['q4','q5','q6','final'].some(k=>rec.answers?.[k]!==undefined && rec.answers?.[k]!=='' );
+  if(key==='m5') return (rec.done||[]).includes('m5') || Boolean(String(rec.answers?.a5||'').trim()) || ['c1','c2','c3','c4','c5'].some(k=>rec.answers?.[k]===true);
+  return (rec.done||[]).includes(key) || MODULE_INFO[key].items.some(k=>rec.answers?.[k]!==undefined && rec.answers?.[k]!=='' );
+}
+function shortText(v,n=70){ v=String(v??'').trim(); return v.length>n?v.slice(0,n-1)+'…':v||'—'; }
+function yesNo(v){ return v ? 'Sí' : 'No'; }
+function scoreTag(v){ return `<span class="badge ${Number(v)>=3?'':'warn'}">${Number(v)||0}/3 aciertos</span>`; }
+
+function moduleStats(rs){
+  return ['m1','m2','m3','m4','m5','reto'].map(k=>{
+    const used=rs.filter(r=>hasModule(r,k));
+    return {key:k,name:MODULE_INFO[k].name,count:used.length,snippet: used.length? shortText(sampleSnippet(used[0],k),90): 'Sin registros todavía'};
+  });
+}
+function sampleSnippet(rec,key){
+  const a=rec.answers||{};
+  if(key==='m1') return a.a1 || OPTION_TEXT.q1[a.q1] || '';
+  if(key==='m2') return a.a2 || OPTION_TEXT.q2[a.q2] || '';
+  if(key==='m3') return a.a3 || OPTION_TEXT.q3[a.q3] || '';
+  if(key==='m4') return a.a4a || a.a4b || a.a4c || '';
+  if(key==='m5') return a.a5 || ['c1','c2','c3','c4','c5'].filter(x=>a[x]).join(', ');
+  return a.final || OPTION_TEXT.q4[a.q4] || OPTION_TEXT.q5[a.q5] || OPTION_TEXT.q6[a.q6] || '';
+}
+
+function renderModuleCards(rs){
+  const root=$('moduleCards'); root.replaceChildren();
+  for(const m of moduleStats(rs)){
+    const d=document.createElement('div'); d.className='moduleCard';
+    d.innerHTML=`<h3>${m.name}</h3><div class="big">${m.count}</div><div class="muted">sesiones con respuesta o avance</div><span class="snippet">Consulte el detalle de cada respuesta en el reporte individual.</span>`;
+    root.appendChild(d);
+  }
+}
+
+function applyFilters(){
+  const search=$('search').value.trim().toLowerCase();
+  const completion=$('completionFilter').value;
+  const mod=$('moduleFilter').value;
+  filtered=records.filter(r=>{
+    const alias=String(r.alias||'').toLowerCase();
+    if(search && !alias.includes(search)) return false;
+    const complete = moduleCount(r)===5;
+    if(completion==='complete' && !complete) return false;
+    if(completion==='partial' && complete) return false;
+    if(mod!=='all' && !hasModule(r,mod)) return false;
+    return true;
+  });
+  render();
+}
+
+function render(){
+  $('count').textContent=filtered.length;
+  $('complete').textContent=filtered.filter(x=>moduleCount(x)===5).length;
+  $('average').textContent=filtered.length?(filtered.reduce((s,x)=>s+(Number(x.score)||0),0)/filtered.length).toFixed(1):'—';
+  $('codes').textContent=uniqueCodes(filtered);
+  renderModuleCards(filtered);
+
+  rows.replaceChildren();
+  for(const x of filtered){
+    const tr=document.createElement('tr');
+    const progress=`${moduleCount(x)}/5 módulos`;
+    const summary=[ shortText(x.answers?.a4a,34), shortText(x.answers?.a5,34), shortText(x.answers?.final,34) ].filter(v=>v!=='—').join(' · ') || 'Sin resumen escrito';
+    const cells=[ x.alias||'Sin código', progress, `${x.score??0}/3`, printTime(x.updatedAt), summary ];
+    for(const v of cells){ const td=document.createElement('td'); td.textContent=String(v); tr.appendChild(td); }
+    const td=document.createElement('td');
+    const b=document.createElement('button'); b.className='button alt small'; b.textContent='Ver reporte';
+    b.addEventListener('click',()=>openDetail(x)); td.appendChild(b); tr.appendChild(td);
+    rows.appendChild(tr);
+  }
+  $('teacherMsg').textContent=filtered.length+' sesiones mostradas.';
+  $('teacherMsg').classList.remove('error');
+}
+
+function answerBlock(title, value, cls=''){
+  return `<div class="qitem"><div class="qtitle">${escapeHTML(title)}</div><div class="answer ${cls}">${escapeHTML(value||'Sin respuesta')}</div></div>`;
+}
+function radioAnswer(rec,key){
+  const val=rec.answers?.[key];
+  if(val===undefined) return 'Sin respuesta';
+  const txt=OPTION_TEXT[key]?.[String(val)] || String(val);
+  const mark=String(val)==='1' ? '✔ Correcta' : '✘ Incorrecta';
+  return `${mark}\n${txt}`;
+}
+function checkboxAnswer(rec,key){ return rec.answers?.[key] ? 'Sí' : 'No'; }
+function pillModules(rec){ return ['m1','m2','m3','m4','m5'].filter(m=>(rec.done||[]).includes(m)).map(m=>`<span class="pill">${m.toUpperCase()}</span>`).join(''); }
+
+function openDetail(rec){
+  $('detailTitle').textContent=`${rec.alias||'Sin código'} · reporte individual`;
+  const body=$('detailBody');
+  body.innerHTML=`
+    <div class="sessionHero">
+      <div class="heroMini"><b>${escapeHTML(rec.alias||'—')}</b><span class="muted">Código</span></div>
+      <div class="heroMini"><b>${moduleCount(rec)}/5</b><span class="muted">Módulos completados</span><div class="pillList">${pillModules(rec)||'<span class="pill">Sin avance</span>'}</div></div>
+      <div class="heroMini"><b>${Number(rec.score)||0}/3</b><span class="muted">Aciertos en el reto</span></div>
+      <div class="heroMini"><b>${escapeHTML(printTime(rec.updatedAt))}</b><span class="muted">Último guardado</span></div>
+    </div>
+    <section class="detailSection">
+      <h3>${MODULE_INFO.m1.name}</h3>
+      ${answerBlock(QUESTION_TEXT.q1, radioAnswer(rec,'q1'))}
+      ${answerBlock(QUESTION_TEXT.a1, rec.answers?.a1)}
+    </section>
+    <section class="detailSection">
+      <h3>${MODULE_INFO.m2.name}</h3>
+      ${answerBlock(QUESTION_TEXT.q2, radioAnswer(rec,'q2'))}
+      ${answerBlock(QUESTION_TEXT.a2, rec.answers?.a2)}
+    </section>
+    <section class="detailSection">
+      <h3>${MODULE_INFO.m3.name}</h3>
+      ${answerBlock(QUESTION_TEXT.q3, radioAnswer(rec,'q3'))}
+      ${answerBlock(QUESTION_TEXT.a3, rec.answers?.a3)}
+    </section>
+    <section class="detailSection">
+      <h3>${MODULE_INFO.m4.name}</h3>
+      ${answerBlock(QUESTION_TEXT.a4a, rec.answers?.a4a)}
+      ${answerBlock(QUESTION_TEXT.a4b, rec.answers?.a4b)}
+      ${answerBlock(QUESTION_TEXT.a4c, rec.answers?.a4c)}
+    </section>
+    <section class="detailSection">
+      <h3>${MODULE_INFO.m5.name}</h3>
+      ${answerBlock(QUESTION_TEXT.c1, checkboxAnswer(rec,'c1'))}
+      ${answerBlock(QUESTION_TEXT.c2, checkboxAnswer(rec,'c2'))}
+      ${answerBlock(QUESTION_TEXT.c3, checkboxAnswer(rec,'c3'))}
+      ${answerBlock(QUESTION_TEXT.c4, checkboxAnswer(rec,'c4'))}
+      ${answerBlock(QUESTION_TEXT.c5, checkboxAnswer(rec,'c5'))}
+      ${answerBlock(QUESTION_TEXT.a5, rec.answers?.a5)}
+    </section>
+    <section class="detailSection">
+      <h3>${MODULE_INFO.reto.name}</h3>
+      ${answerBlock(QUESTION_TEXT.q4, radioAnswer(rec,'q4'))}
+      ${answerBlock(QUESTION_TEXT.q5, radioAnswer(rec,'q5'))}
+      ${answerBlock(QUESTION_TEXT.q6, radioAnswer(rec,'q6'))}
+      ${answerBlock(QUESTION_TEXT.final, rec.answers?.final)}
+    </section>`;
+  $('detail').showModal();
+}
+
+function csvQuote(x){ let s=x==null?'':String(x); if(/^[\s]*[=+@\-\t\r]/.test(s)) s="'"+s; return '"'+s.replaceAll('"','""')+'"'; }
+function downloadCSV(filename, fields, dataRows){
+  const out=[fields.map(csvQuote).join(',')];
+  for(const row of dataRows) out.push(row.map(csvQuote).join(','));
+  const blob=new Blob(['\uFEFF'+out.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
+}
+function exportSummary(){
+  const fields=['codigo','modulos_completados','aciertos','ultimo_guardado','q1','a1','q2','a2','q3','a3','a4a','a4b','a4c','c1','c2','c3','c4','c5','a5','q4','q5','q6','final'];
+  const rows=filtered.map(r=>[
+    r.alias||'', moduleCount(r), Number(r.score)||0, printTime(r.updatedAt),
+    radioAnswer(r,'q1'), r.answers?.a1||'', radioAnswer(r,'q2'), r.answers?.a2||'', radioAnswer(r,'q3'), r.answers?.a3||'',
+    r.answers?.a4a||'', r.answers?.a4b||'', r.answers?.a4c||'', yesNo(r.answers?.c1), yesNo(r.answers?.c2), yesNo(r.answers?.c3), yesNo(r.answers?.c4), yesNo(r.answers?.c5), r.answers?.a5||'',
+    radioAnswer(r,'q4'), radioAnswer(r,'q5'), radioAnswer(r,'q6'), r.answers?.final||''
+  ]);
+  downloadCSV('ova_wayuu_reporte_general.csv', fields, rows);
+}
+function exportModules(){
+  const fields=['codigo','modulo','pregunta','respuesta','ultimo_guardado'];
+  const out=[];
+  for(const r of filtered){
+    const t=printTime(r.updatedAt);
+    const push=(mod,key,val)=>out.push([r.alias||'', MODULE_INFO[mod].name, QUESTION_TEXT[key]||key, val, t]);
+    push('m1','q1',radioAnswer(r,'q1')); push('m1','a1',r.answers?.a1||'');
+    push('m2','q2',radioAnswer(r,'q2')); push('m2','a2',r.answers?.a2||'');
+    push('m3','q3',radioAnswer(r,'q3')); push('m3','a3',r.answers?.a3||'');
+    push('m4','a4a',r.answers?.a4a||''); push('m4','a4b',r.answers?.a4b||''); push('m4','a4c',r.answers?.a4c||'');
+    push('m5','c1',yesNo(r.answers?.c1)); push('m5','c2',yesNo(r.answers?.c2)); push('m5','c3',yesNo(r.answers?.c3)); push('m5','c4',yesNo(r.answers?.c4)); push('m5','c5',yesNo(r.answers?.c5)); push('m5','a5',r.answers?.a5||'');
+    push('reto','q4',radioAnswer(r,'q4')); push('reto','q5',radioAnswer(r,'q5')); push('reto','q6',radioAnswer(r,'q6')); push('reto','final',r.answers?.final||'');
+  }
+  downloadCSV('ova_wayuu_reporte_por_modulo.csv', fields, out);
+}
+
+// Excel real (.xlsx), generado en el navegador sin dependencias adicionales.
+// Solo convierte a archivo los registros ya consultados; nunca escribe en Firestore.
+function xlsxXmlEsc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[m]));}
+function colName(n){let s='';for(n++;n>0;n=Math.floor((n-1)/26))s=String.fromCharCode(65+(n-1)%26)+s;return s;}
+function sheetXml(data){
+  const rows=data.map((row,i)=>'<row r="'+(i+1)+'">'+row.map((val,j)=>{
+    const addr=colName(j)+(i+1);
+    if(typeof val==='number' && Number.isFinite(val)) return `<c r="${addr}"><v>${val}</v></c>`;
+    return `<c r="${addr}" t="inlineStr"><is><t xml:space="preserve">${xlsxXmlEsc(val)}</t></is></c>`;
+  }).join('')+'</row>').join('');
+  const n=Math.max(1,data[0]?.length||1),last=colName(n-1);
+  const widths=Array.from({length:n},(_,j)=>`<col min="${j+1}" max="${j+1}" width="${j===0?23:j===1?26:34}" customWidth="1"/>`).join('');
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${widths}</cols><sheetData>${rows}</sheetData><autoFilter ref="A1:${last}${Math.max(1,data.length)}"/></worksheet>`;
+}
+function zipStore(files){
+  const encoder=new TextEncoder(),chunks=[],central=[];
+  let offset=0;
+  const u16=n=>{const b=new Uint8Array(2);new DataView(b.buffer).setUint16(0,n,true);return b;};
+  const u32=n=>{const b=new Uint8Array(4);new DataView(b.buffer).setUint32(0,n>>>0,true);return b;};
+  const crc32=data=>{let c=0xffffffff;for(const b of data){c^=b;for(let i=0;i<8;i++)c=(c>>>1)^((c&1)?0xedb88320:0);}return(c^0xffffffff)>>>0;};
+  const append=(items,parts)=>parts.forEach(p=>items.push(p));
+  for(const [name,content] of Object.entries(files)){
+    const fn=encoder.encode(name),body=encoder.encode(content),crc=crc32(body),sz=body.length;
+    const loc=[u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(sz),u32(sz),u16(fn.length),u16(0),fn,body];
+    append(chunks,loc);
+    const entry=[u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(sz),u32(sz),u16(fn.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),fn];
+    central.push(...entry);offset+=loc.reduce((n,p)=>n+p.length,0);
+  }
+  const centralSize=central.reduce((n,p)=>n+p.length,0), count=Object.keys(files).length;
+  const eocd=[u32(0x06054b50),u16(0),u16(0),u16(count),u16(count),u32(centralSize),u32(offset),u16(0)];
+  return new Blob([...chunks,...central,...eocd],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+function excelBlob(sheets){
+ const m='http://schemas.openxmlformats.org/spreadsheetml/2006/main',r='http://schemas.openxmlformats.org/officeDocument/2006/relationships',rel='http://schemas.openxmlformats.org/package/2006/relationships';
+ const wb=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="${m}" xmlns:r="${r}"><sheets>${sheets.map((sh,i)=>`<sheet name="${xlsxXmlEsc(sh.name)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')}</sheets></workbook>`;
+ const paths={
+  '[Content_Types].xml':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${sheets.map((_,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`,
+  '_rels/.rels':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="${rel}"><Relationship Id="rId1" Type="${r}/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
+  'xl/workbook.xml':wb,
+  'xl/_rels/workbook.xml.rels':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="${rel}">${sheets.map((_,i)=>`<Relationship Id="rId${i+1}" Type="${r}/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')}</Relationships>`,
+ };
+ sheets.forEach((sh,i)=>paths[`xl/worksheets/sheet${i+1}.xml`]=sheetXml(sh.rows));
+ return zipStore(paths);
+}
+function exportExcel(){
+ const summary=[['Código','Módulos completados','Aciertos (0 a 3)','Último guardado','Estado']];
+ const detail=[['Código','Módulo','Pregunta / actividad','Respuesta','Último guardado']];
+ const matrix=[['Código','Módulos completos','Aciertos','Último guardado','Alfabetización: prueba','Alfabetización: reflexión','Ciudadanía: prueba','Ciudadanía: acuerdo','Pensamiento crítico: prueba','Pensamiento crítico: criterios','Territorio: pregunta','Territorio: fuentes','Territorio: producto','Galería: lista 1','Galería: lista 2','Galería: lista 3','Galería: lista 4','Galería: lista 5','Galería: título','Reto 1','Reto 2','Reto 3','Reflexión final']];
+ for(const r of filtered){
+  const alias=r.alias||'Sin código',date=printTime(r.updatedAt),done=moduleCount(r),score=Number(r.score)||0;
+  summary.push([alias,done,score,date,done===5?'5 módulos':'Parcial']);
+  matrix.push([alias,done,score,date,radioAnswer(r,'q1'),r.answers?.a1||'',radioAnswer(r,'q2'),r.answers?.a2||'',radioAnswer(r,'q3'),r.answers?.a3||'',r.answers?.a4a||'',r.answers?.a4b||'',r.answers?.a4c||'',yesNo(r.answers?.c1),yesNo(r.answers?.c2),yesNo(r.answers?.c3),yesNo(r.answers?.c4),yesNo(r.answers?.c5),r.answers?.a5||'',radioAnswer(r,'q4'),radioAnswer(r,'q5'),radioAnswer(r,'q6'),r.answers?.final||'']);
+  for(const [k,mod] of Object.entries(MODULE_INFO))for(const q of mod.items){
+   const val=['q1','q2','q3','q4','q5','q6'].includes(q)?radioAnswer(r,q):q.startsWith('c')?yesNo(r.answers?.[q]):r.answers?.[q]||'';
+   detail.push([alias,mod.name,QUESTION_TEXT[q]||q,val,date]);
+  }
+ }
+ const file=excelBlob([{name:'Resumen',rows:summary},{name:'Por módulo',rows:detail},{name:'Matriz de respuestas',rows:matrix}]);
+ const url=URL.createObjectURL(file),a=document.createElement('a');a.href=url;a.download='OVA_Wayuu_Reporte_Docente.xlsx';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+
+if(configured){
+  const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+  const setError=text=>{ $('teacherMsg').textContent=text; $('teacherMsg').classList.add('error'); };
+  async function load(){
+    $('teacherMsg').classList.remove('error');
+    $('teacherMsg').textContent='Consultando Firestore...';
+    $('downloadSummary').disabled=true; $('downloadModules').disabled=true;
+    try{
+      const snap=await getDocs(collection(db,'ova_respuestas'));
+      records=snap.docs.map(d=>({id:d.id,...d.data()}));
+      records.sort((a,b)=>(b.updatedAt?.seconds||0)-(a.updatedAt?.seconds||0));
+      applyFilters();
+      $('teacherMsg').textContent=records.length+' sesiones cargadas desde la base de datos.';
+      $('downloadSummary').disabled=false; $('downloadModules').disabled=false;
+    }catch(e){ records=[];filtered=[];rows.replaceChildren();setError('No puede leer las respuestas: '+(e.code||e.message)+'. Revise las reglas y el UID autorizado del docente.'); }
+  }
+  $('teacherGoogle').addEventListener('click',async()=>{
+    $('loginMsg').textContent='Abriendo Google...';
+    try{ await signInWithPopup(auth,new GoogleAuthProvider()); }
+    catch(e){ $('loginMsg').textContent='Error al iniciar con Google: '+(e.code||e.message); $('loginMsg').classList.add('error'); }
+  });
+  onAuthStateChanged(auth,u=>{
+    const google=!!u && u.providerData.some(p=>p.providerId==='google.com');
+    $('login').style.display=google?'none':'block';
+    $('data').style.display=google?'block':'none';
+    if(google){ $('teacherUID').textContent=u.uid; load(); }
+    else $('loginMsg').textContent='Ingrese con su cuenta Google docente para obtener su UID y solicitar acceso.';
+  });
+  $('copyUID').addEventListener('click',()=>navigator.clipboard.writeText($('teacherUID').textContent));
+  $('logout').addEventListener('click',()=>signOut(auth));
+  $('refresh').addEventListener('click',load);
+  $('downloadSummary').addEventListener('click',exportExcel);
+  $('downloadModules').addEventListener('click',exportModules);
+}
+
+$('search').addEventListener('input',applyFilters);
+$('completionFilter').addEventListener('change',applyFilters);
+$('moduleFilter').addEventListener('change',applyFilters);
+$('closeDetails').addEventListener('click',()=>$('detail').close());
+</script>
+</body>
+</html>
