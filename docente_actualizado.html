@@ -1,0 +1,51 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panel docente privado · OVA Wayuu</title>
+<style>
+:root{font-family:system-ui,Segoe UI,Arial,sans-serif;color:#173b38;background:#f2f7f4}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1170px;margin:auto;padding:30px 20px 60px}header{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}.box{background:white;border:1px solid #d3e5dd;border-radius:15px;padding:22px;margin:20px 0;box-shadow:0 6px 22px #112b2010}h1{font-size:28px;margin-bottom:8px}h2{font-size:19px}.lead{color:#527267;line-height:1.6}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}.stat{padding:18px;background:#e9f5ee;border-radius:13px}.stat b{display:block;font-size:28px}.muted{font-size:13px;color:#557468}.button{padding:11px 15px;background:#126d56;color:#fff;border:0;border-radius:9px;cursor:pointer;font-weight:700}.button.alt{background:#e3efea;color:#164b3e}input{width:100%;padding:11px;border:1px solid #b4cbc1;border-radius:8px;font:inherit}label{display:block;margin:12px 0 5px;font-weight:650}.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.tablebox{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;border-bottom:1px solid #e1eae6;padding:12px}th{background:#eef4ef}tr:hover{background:#f8fcfa}.message{background:#f4f8f5;border-left:4px solid #198063;padding:12px;margin-top:12px;line-height:1.5}.error{border-left-color:#bc5141;background:#fff2ee}dialog{width:min(750px,95vw);border:1px solid #d6e3dd;border-radius:14px;padding:24px}dialog::backdrop{background:#11251faa}pre{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;background:#f5f8f6;padding:15px;border-radius:8px}a{color:#186e56}#data{display:none}
+</style></head><body><div class="wrap"><header><div><div class="muted">Conectando Saberes · Exploradores Digitales Wayuu</div><h1>Panel docente privado</h1><div class="lead">Registros de aprendizaje almacenados en Cloud Firestore. No publique las respuestas individuales de menores.</div></div><div class="controls"><a class="button alt" href="./reporte.html">Abrir reporte visual</a><a href="./index.html">Volver al OVA</a></div></header>
+<section class="box" id="login"><h2>Acceso exclusivo del docente</h2><p class="lead">Ingrese con su cuenta Google docente. Para autorizarla, copie el UID que aparece al ingresar y sustitúyalo en las reglas de Firestore. No comparta contraseñas.</p><p><button class="button" id="teacherGoogle" type="button">Entrar con Google como docente</button></p><div class="message" id="loginMsg">Debe configurar Firebase Authentication y las reglas de Firestore antes de utilizar este panel.</div></section>
+<section id="data"><div class="box"><h2>Identificador de su cuenta (UID)</h2><p class="lead">Copie este identificador y colóquelo en <code>firestore.rules</code>, sustituyendo <code>REEMPLAZAR_UID_DOCENTE</code>. Hasta publicar las reglas no podrá ver registros.</p><p><code id="teacherUID"></code> <button id="copyUID" class="button alt" type="button">Copiar UID</button></p></div><div class="controls"><button class="button alt" id="logout">Cerrar sesión</button><button class="button" id="download">Descargar CSV para Excel</button><button class="button alt" id="refresh">Actualizar registros</button></div><div class="box stats"><div class="stat"><b id="count">0</b><span>Sesiones registradas</span></div><div class="stat"><b id="complete">0</b><span>Con 5 módulos</span></div><div class="stat"><b id="average">—</b><span>Aciertos promedio (0 a 3)</span></div></div><div class="box"><h2>Registros individuales por sesión</h2><p class="lead">El código identifica la sesión sin solicitar nombres completos. Una misma persona puede aparecer en más de una sesión o dispositivo.</p><div id="teacherMsg" class="message" role="status">Consultando...</div><div class="tablebox"><table><thead><tr><th>Código</th><th>Módulos</th><th>Aciertos</th><th>Último guardado</th><th>Detalle</th></tr></thead><tbody id="rows"></tbody></table></div></div></section>
+<dialog id="detail"><h2>Respuestas de la sesión</h2><pre id="detailContent"></pre><button class="button" id="closeDetails">Cerrar</button></dialog></div>
+<script type="module">
+import { firebaseConfig } from './firebase-config.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
+import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
+const $=id=>document.getElementById(id), rows=$('rows');
+let records=[];
+const configured=firebaseConfig?.apiKey && firebaseConfig?.projectId && !JSON.stringify(firebaseConfig).includes('PEGUE_');
+if(!configured){$('loginMsg').textContent='Firebase aún no está configurado. Complete firebase-config.js y las reglas de Firestore.';$('loginMsg').classList.add('error');}
+else{
+ const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+ const setError=(text)=>{$('teacherMsg').textContent=text;$('teacherMsg').classList.add('error');};
+ const printTime=v=>{try{return v?.toDate?.().toLocaleString('es-CO')||'Sin fecha'}catch{return 'Sin fecha'}};
+ function render(){
+  $('count').textContent=records.length;
+  $('complete').textContent=records.filter(x=>(x.done||[]).length===5).length;
+  $('average').textContent=records.length?(records.reduce((s,x)=>s+(Number(x.score)||0),0)/records.length).toFixed(1):'—';
+  rows.replaceChildren();
+  for(let i=0;i<records.length;i++){
+   const x=records[i],tr=document.createElement('tr');
+   for(const v of [x.alias||'Sin código',(x.done||[]).length+'/5',(x.score??0)+'/3',printTime(x.updatedAt)]){const td=document.createElement('td');td.textContent=String(v);tr.append(td)}
+   const td=document.createElement('td'),b=document.createElement('button');b.className='button alt';b.textContent='Ver';b.addEventListener('click',()=>{const z={codigo:x.alias,modulos:x.done,aciertos:x.score,respuestas:x.answers,fecha:printTime(x.updatedAt)};$('detailContent').textContent=JSON.stringify(z,null,2);$('detail').showModal()});td.append(b);tr.append(td);rows.append(tr);
+  }
+ }
+ async function load(){
+  $('teacherMsg').classList.remove('error');$('teacherMsg').textContent='Consultando Firestore...';
+  try{const snap=await getDocs(collection(db,'ova_respuestas'));records=snap.docs.map(d=>({id:d.id,...d.data()}));records.sort((a,b)=>(b.updatedAt?.seconds||0)-(a.updatedAt?.seconds||0));render();$('teacherMsg').textContent=records.length+' sesiones cargadas desde la base de datos.';}
+  catch(e){setError('No puede leer las respuestas: '+(e.code||e.message)+'. Revise las reglas y el UID autorizado del docente.');}
+ }
+ $('teacherGoogle').addEventListener('click',async()=>{$('loginMsg').textContent='Abriendo Google...';try{await signInWithPopup(auth,new GoogleAuthProvider());}catch(e){$('loginMsg').textContent='Error al iniciar con Google: '+(e.code||e.message);$('loginMsg').classList.add('error');}});
+ onAuthStateChanged(auth,u=>{const google=!!u && u.providerData.some(p=>p.providerId==='google.com');$('login').style.display=google?'none':'block';$('data').style.display=google?'block':'none';if(google){$('teacherUID').textContent=u.uid;load();}else{$('loginMsg').textContent='Ingrese con su cuenta Google docente para obtener su UID y solicitar acceso.';}});
+ $('copyUID').addEventListener('click',()=>navigator.clipboard.writeText($('teacherUID').textContent));
+ $('logout').addEventListener('click',()=>signOut(auth));$('refresh').addEventListener('click',load);
+ $('download').addEventListener('click',()=>{
+   const fields=['id','alias','modulos','aciertos','fecha','q1','q2','q3','q4','q5','q6','a1','a2','a3','a4a','a4b','a4c','a5','final'];
+   const quote=x=>{let s=x==null?'':String(x);if(/^[\s]*[=+@\-\t\r]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"'};
+   const out=[fields.map(quote).join(',')];
+   for(const r of records){const row=[r.id,r.alias,(r.done||[]).join('|'),r.score,printTime(r.updatedAt),...fields.slice(5).map(k=>r.answers?.[k]??'')];out.push(row.map(quote).join(','));}
+   const blob=new Blob(['\uFEFF'+out.join('\r\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ova_wayuu_resultados.csv';a.click();URL.revokeObjectURL(url);
+ });
+}
+$('closeDetails').addEventListener('click',()=>$('detail').close());
+</script></body></html>
